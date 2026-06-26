@@ -95,9 +95,67 @@ curl "http://localhost:8000/api/search?q=лошади"
 ]
 ```
 
-## Переменные окружения
+## Переменные окружения (.env)
 
-| Переменная | Описание | По умолчанию |
-|---|---|---|
-| `DATABASE_URL` | PostgreSQL connection string | `postgresql+asyncpg://postgres:postgres@localhost:5432/tnved` |
-| `SEARCH_LIMIT` | Лимит результатов поиска | `50` |
+### Где создавать
+
+Файл `.env` создаётся в папке `backend/`:
+
+```
+project/
+├── backend/
+│   ├── .env          <-- здесь
+│   ├── app/
+│   ├── alembic/
+│   ├── import_excel.py
+│   └── ...
+├── frontend/
+└── docker-compose.yml
+```
+
+Скопируйте из примера:
+
+```bash
+cd backend
+cp .env.example .env
+```
+
+### Поля
+
+| Переменная | Обязательная | Описание | Значение по умолчанию |
+|---|---|---|---|
+| `DATABASE_URL` | Да | Строка подключения к PostgreSQL. Формат: `postgresql+asyncpg://USER:PASSWORD@HOST:PORT/DBNAME` | `postgresql+asyncpg://postgres:postgres@localhost:5432/tnved` |
+| `SEARCH_LIMIT` | Нет | Максимальное количество результатов при поиске по наименованию (`GET /api/search`) | `50` |
+
+### Примеры .env
+
+**Локальная разработка:**
+
+```env
+DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/tnved
+SEARCH_LIMIT=50
+```
+
+**Docker (backend подключается к контейнеру `db`):**
+
+При запуске через `docker compose up` переменная `DATABASE_URL` задаётся в `docker-compose.yml` автоматически, файл `.env` не нужен.
+
+```yaml
+# docker-compose.yml уже содержит:
+environment:
+  DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/tnved
+```
+
+**Продакшн (пример):**
+
+```env
+DATABASE_URL=postgresql+asyncpg://tnved_user:strong_password@db.example.com:5432/tnved_prod
+SEARCH_LIMIT=100
+```
+
+### Важно
+
+- Файл `.env` добавлен в `.gitignore` — он не попадает в git
+- Для справки используйте `.env.example`
+- При запуске через Docker `.env` не требуется — переменные заданы в `docker-compose.yml`
+- При локальной разработке `.env` обязателен (или нужно задать переменные окружения вручную)
