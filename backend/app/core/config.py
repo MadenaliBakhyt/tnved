@@ -1,12 +1,9 @@
-from pathlib import Path
-
 from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    database_url: str = f"sqlite:///{Path(__file__).resolve().parent.parent / 'data' / 'tnved.db'}"
+    database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/tnved"
     app_title: str = "ТН ВЭД API"
-    app_description: str = "API для поиска информации по коду ТН ВЭД"
     app_version: str = "1.0.0"
     search_limit: int = 50
 

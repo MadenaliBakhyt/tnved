@@ -1,103 +1,103 @@
-# ТН ВЭД API
+# ТН ВЭД Search API
 
-API для поиска информации по коду ТН ВЭД (Товарная номенклатура внешнеэкономической деятельности).
-
-## Установка
-
-```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-```
-
-## Импорт данных из Excel
-
-```bash
-python import_excel.py tnved.xlsx
-```
-
-Скрипт автоматически создаёт базу данных SQLite в `data/tnved.db`. При повторном запуске данные полностью заменяются.
-
-## Запуск API
-
-```bash
-uvicorn app.api:app --host 0.0.0.0 --port 8000
-```
+Приложение для поиска информации по коду ТН ВЭД. Backend на FastAPI + PostgreSQL, frontend на React + TypeScript + TailwindCSS.
 
 ## Запуск через Docker
 
 ```bash
-# Сначала импортируйте данные локально или положите готовую БД в data/
 docker compose up -d
 ```
 
-## API Endpoints
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:8000
+- Swagger: http://localhost:8000/docs
+- PostgreSQL: localhost:5432
+
+## Импорт данных из Excel
+
+```bash
+# При запущенном PostgreSQL (через Docker или локально)
+cd backend
+pip install -r requirements.txt
+
+# Применить миграции
+alembic upgrade head
+
+# Импортировать данные
+python import_excel.py tnved.xlsx
+```
+
+Формат Excel: первые 4 колонки — Код, Наименование, Тариф, Подробности. Все остальные колонки объединяются в массив документов.
+
+## Локальный запуск без Docker
+
+### PostgreSQL
+
+Создать базу данных `tnved`:
+
+```bash
+createdb tnved
+```
+
+### Backend
+
+```bash
+cd backend
+pip install -r requirements.txt
+alembic upgrade head
+uvicorn app.main:app --host 0.0.0.0 --port 8000
+```
+
+### Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Frontend будет доступен на http://localhost:5173, запросы к `/api` проксируются на backend.
+
+## API
 
 ### Поиск по коду
 
-```
-GET /code/{code}
-```
-
-Пример:
 ```bash
-curl http://localhost:8000/code/9705220000
+curl http://localhost:8000/api/code/0101210000
 ```
 
-Ответ:
 ```json
 {
-  "code": "9705220000",
-  "name": "...",
+  "code": "0101210000",
+  "name": "Лошади чистопородные",
   "tariff": "0%",
-  "details": "...",
-  "unit": "...",
-  "notes": "..."
+  "details": "подробнее",
+  "documents": [
+    "Внешнеэкономический контракт",
+    "Коммерческий инвойс",
+    "CMR"
+  ]
 }
 ```
 
 ### Поиск по наименованию
 
-```
-GET /search?q=молоко&limit=10
+```bash
+curl "http://localhost:8000/api/search?q=лошади"
 ```
 
-Ответ:
 ```json
-{
-  "total": 5,
-  "results": [
-    {
-      "code": "...",
-      "name": "...",
-      "tariff": "...",
-      "details": "...",
-      "unit": "...",
-      "notes": "..."
-    }
-  ]
-}
+[
+  {
+    "code": "0101210000",
+    "name": "Лошади чистопородные"
+  }
+]
 ```
 
-### Проверка здоровья
-
-```
-GET /health
-```
-
-## Swagger документация
-
-После запуска доступна по адресу:
-
-```
-http://localhost:8000/docs
-```
-
-## Конфигурация
-
-Через файл `.env`:
+## Переменные окружения
 
 | Переменная | Описание | По умолчанию |
 |---|---|---|
-| `DATABASE_URL` | Путь к SQLite базе | `sqlite:///data/tnved.db` |
+| `DATABASE_URL` | PostgreSQL connection string | `postgresql+asyncpg://postgres:postgres@localhost:5432/tnved` |
 | `SEARCH_LIMIT` | Лимит результатов поиска | `50` |
